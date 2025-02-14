@@ -1,0 +1,8 @@
+---------------------------------------------------------------------------------------------------
+Version: 2.0.22
+Date: 2024-02-??
+
+  Features:
+    - This mod adds support to add units in batch for the turret's target priorities list.
+    - added remote_api advanced_target_priorities_register_section_data() for 3rd party mod integration. See mod detail page for developer guide.
+    - added remote_api advanced_target_priorities_insert_section_data() for 3rd party mod integration. See mod detail page for developer guide.

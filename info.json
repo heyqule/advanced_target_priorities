@@ -1,0 +1,12 @@
+﻿{
+  "name": "advanced_target_priorities",
+  "version": "1.0.0",
+  "date": "2025-02-15",
+  "title": "Advanced Target Priorities",
+  "author": "heyqule",
+  "description": "Streamline selecting target priorities.",
+  "factorio_version": "2.0",
+  "dependencies": [
+    "base >= 2.0.0"
+  ]
+}
