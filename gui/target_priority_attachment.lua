@@ -3,7 +3,12 @@
 --- Created by heyqule.
 --- DateTime: 6/15/2024 2:10 AM
 ---
+require('util')
 local enemy_data = require('__advanced_target_priorities__/gui/enemy_data')
+
+local can_override_by_register_call = {
+    enemyracemanager = true
+}
 
 local TargetPriorityAttachment = {
     root_name = "advanced_target_priority_attachment",
@@ -20,7 +25,9 @@ local TargetPriorityAttachment = {
     },
     apply_button = "advanced_target_priority_apply",
     preset_label = "advanced_target_priority_preset_label",
+    preset_label_field = nil,
     clear_button = "advanced_target_priority_clear",
+    default_preset = "Default",
 }
 
 local function get_values(tbl)
@@ -213,7 +220,10 @@ function TargetPriorityAttachment.init()
             local dataset = remote.call(interface_name, "advanced_target_priorities_register_section_data")
             for _, data in pairs(dataset) do
                 if not data.name or not data.delimiter or not data.options or not data.option_titles then
-                    error("Missing data attributes for advanced_target_priorities_register_section_data call in "..interface_name)
+                    error("[advanced_target_priorities_register_section_data] Missing required data attributes. Caused:"..interface_name)
+                end
+                if storage.target_priority_data[data.name] ~= nil and not can_override_by_register_call[interface_name] then
+                    error("[advanced_target_priorities_register_section_data] Section name has already in use. Caused:"..interface_name)
                 end
                 storage.target_priority_data[data.name] = data
             end
@@ -223,11 +233,10 @@ function TargetPriorityAttachment.init()
             local dataset = remote.call(interface_name, "advanced_target_priorities_insert_section_data")
             for _, record in pairs(dataset) do
                 if not record.section or not record.option_title or not record.option then
-                    error("Missing data attributes for advanced_target_priorities_insert_section_data call in "..interface_name)
+                    error("[advanced_target_priorities_insert_section_data] Missing data attributes. Caused:"..interface_name)
                 end
-                print('running...')
+
                 if storage.target_priority_data[record.section] then
-                    print('has section')
                     local section = storage.target_priority_data[record.section]
                     local target_index = nil
                     for index, option_title in pairs(section.option_titles) do
@@ -236,7 +245,7 @@ function TargetPriorityAttachment.init()
                             break
                         end
                     end
-                    print('taret index'..target_index)
+
                     if target_index then
                         local can_update = true
                         for _, option in pairs(section.options[target_index]) do
@@ -256,14 +265,48 @@ function TargetPriorityAttachment.init()
     end
 
     storage.target_priority_player_data = storage.target_priority_player_data or {}
-    storage.target_priority_force_data = storage.target_priority_force_data or {}
+    storage.target_priority_presets = storage.target_priority_presets or {}
     
     storage.prototype_data = cache_prototypes()
 end
 
+function TargetPriorityAttachment.init_player_values(player_index)
+    storage.target_priority_player_data[player_index] = storage.target_priority_player_data[player_index] or {
+        --- format: checkbox_data[section][type][name] = true
+        checkbox_data = {},
+        current_section = 'biters',
+        preset = TargetPriorityAttachment.default_preset
+    }
+
+    storage.target_priority_presets[player_index] = storage.target_priority_presets[player_index] or {
+        [TargetPriorityAttachment.default_preset] = {
+            name = TargetPriorityAttachment.default_preset,
+            checkbox_data = {}
+        }
+    }
+
+    if DEBUG_MODE then
+        storage.target_priority_presets[player_index]["DEMO 1"] = 
+                {
+                    name = "DEMO 1",
+                    checkbox_data = {}
+                }
+        storage.target_priority_presets[player_index]["DEMO 2"] =
+        {
+            name = "DEMO 2",
+            checkbox_data = {}
+        }
+        storage.target_priority_presets[player_index]["DEMO 3"] =
+        {
+            name = "DEMO 3",
+            checkbox_data = {}
+        }        
+    end
+end
+
 function TargetPriorityAttachment.show(player)
     TargetPriorityAttachment.hide(player)
-
+    
     local gui = player.gui.relative
 
     local anchor = {gui=defines.relative_gui_type.turret_gui, position=defines.relative_gui_position.bottom}
@@ -280,28 +323,35 @@ function TargetPriorityAttachment.show(player)
         name = TargetPriorityAttachment.top_section,  
         direction="horizontal" 
     }
-    top_horizontal.add { type = "label", caption = { "gui-target-attachment.title" } }
+    local title = top_horizontal.add { type = "label", caption = { "gui-target-attachment.title" } }
+    title.style.left_margin = 20
+    
     top_horizontal.add { 
         type = "button", 
         name = TargetPriorityAttachment.apply_button, 
         caption = { "gui-target-attachment.apply" }, 
-        style = "green_button"  
+        style = "green_button",  
+        tooltip = { "gui-target-attachment.apply-tooltip"}
     }
-    local active_label = 'None'
+    local active_label = storage.target_priority_player_data[player.index].preset or TargetPriorityAttachment.default_preset
     local preset_label = top_horizontal.add { 
         type = "label", 
         name = TargetPriorityAttachment.preset_label, 
         caption = { "gui-target-attachment.preset_label", active_label }, 
-        tooltip = { "gui-target-attachment.preset_label_tooltip" }
+        tooltip = { "gui-target-attachment.preset_label_tooltip" },
+        style = 'clickable_label'
     }
-    preset_label.style.left_margin = 50
-    preset_label.style.right_margin = 50
+    preset_label.style.left_margin = 35
+    preset_label.style.right_margin = 35
     preset_label.style.width = 400
+    TargetPriorityAttachment.preset_label_field = preset_label
+    
     top_horizontal.add { 
         type = "button", 
         name = TargetPriorityAttachment.clear_button, 
         caption = { "gui-target-attachment.clear" }, 
-        style = "red_button"  
+        style = "red_button",
+        tooltip = { "gui-target-attachment.clear-tooltip"}
     }
     
     local main_horizontal = container.add { type = "flow", name = TargetPriorityAttachment.main_section,  direction="horizontal" }
@@ -326,6 +376,11 @@ function TargetPriorityAttachment.hide(player)
     if player.gui.relative[TargetPriorityAttachment.root_name] then
         player.gui.relative[TargetPriorityAttachment.root_name].destroy()
     end
+end
+
+function TargetPriorityAttachment.refresh_preset(player_index)
+    local active_label = storage.target_priority_player_data[player_index].preset
+    TargetPriorityAttachment.preset_label_field.caption = { "gui-target-attachment.preset_label", active_label }
 end
 
 function TargetPriorityAttachment.refresh_list(list_element, selected_index, player_index)
@@ -381,6 +436,8 @@ function TargetPriorityAttachment.apply(player)
                 end
             end                    
         end
+
+        storage.target_priority_presets[player.index][player_data.preset].checkbox_data = util.table.deepcopy(checkbox_data)
     end
     profiler.stop()
     log({ "", "Setting turret priorities", profiler })
@@ -404,6 +461,7 @@ function TargetPriorityAttachment.clear(player)
         clear_targets(turret)
     end
     storage.target_priority_player_data[player.index].checkbox_data = {}
+    storage.target_priority_presets[player.index][player_data.preset] = {}
 end
 
 

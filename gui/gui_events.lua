@@ -18,11 +18,9 @@ local gui_open_switch = {
         local entity = event.entity
 
         if entity and entity.valid and valid_turret_types[entity.type] then
-            storage.target_priority_player_data[owner.index] = storage.target_priority_player_data[owner.index] or {
-                --- format: checkbox_data[section][type][name] = true
-                checkbox_data = {},
-                current_section = 'biters'
-            }
+            if not storage.target_priority_player_data[owner.index] then
+                TargetPriorityAttachment.init_player_values(owner.index)
+            end
             storage.target_priority_player_data[owner.index].turret = entity,
             TargetPriorityAttachment.show(owner)
         else
@@ -34,6 +32,23 @@ local gui_open_switch = {
 local on_gui_opened = function(event)
     if gui_open_switch[event.gui_type] then
         gui_open_switch[event.gui_type](event)
+    end
+end
+
+local gui_close_switch = {
+    [defines.gui_type.entity] = function(event)
+        local owner = game.players[event.player_index]
+        local entity = event.entity
+
+        if entity and entity.valid and valid_turret_types[entity.type] then
+            PresetWindow.hide(owner)
+        end
+    end
+}
+
+local on_gui_closed = function(event)
+    if gui_close_switch[event.gui_type] then
+        gui_close_switch[event.gui_type](event)
     end
 end
 
@@ -50,13 +65,44 @@ local gui_click_switch = {
     [TargetPriorityAttachment.preset_label] = function(event)
         local player = game.players[event.player_index]
         PresetWindow.show(player)
-    end
+    end,
+    [PresetWindow.preset_name_textfield_confirm_name] = function(event)
+        local player = game.players[event.player_index]
+        PresetWindow.create(player)
+        TargetPriorityAttachment.refresh_preset(event.player_index)
+    end,
+    [PresetWindow.close_button] = function(event)
+        local player = game.players[event.player_index]
+        PresetWindow.hide(player)   
+    end,
+    [PresetWindow.load_tag] = function(event)
+        local player = game.players[event.player_index]
+        PresetWindow.load(player, event.element)
+        TargetPriorityAttachment.apply(player)
+        TargetPriorityAttachment.refresh_preset(event.player_index)
+        TargetPriorityAttachment.refresh_list(TargetPriorityAttachment.section_selector_obj, 1, event.player_index)
+    end,
+    [PresetWindow.remove_tag] = function(event)
+        local player = game.players[event.player_index]
+        PresetWindow.remove(player, event.element)
+        TargetPriorityAttachment.apply(player)
+        TargetPriorityAttachment.refresh_preset(event.player_index)
+        TargetPriorityAttachment.refresh_list(TargetPriorityAttachment.section_selector_obj, 1, event.player_index)
+    end,
 }
 
 local on_gui_click = function(event)
     if gui_click_switch[event.element.name] then
         gui_click_switch[event.element.name](event)
+        return
     end
+
+    if event.element.tags and
+       event.element.tags.type and 
+       gui_click_switch[event.element.tags.type] 
+    then
+        gui_click_switch[event.element.tags.type](event)
+    end 
 end
 
 local on_gui_selection_state_changed = function(event)
@@ -73,6 +119,12 @@ local on_gui_checked_state_changed = function(event)
     end
 end
 
+local on_player_created = function(event)
+    if not storage.target_priority_player_data[event.player_index] then
+        TargetPriorityAttachment.init_player_values(event.player_index)
+    end
+end
+
 local on_configuration_changed = function(event)
     TargetPriorityAttachment.init()
 end
@@ -85,8 +137,10 @@ local GuiEvent = {}
 GuiEvent.events = {
     [defines.events.on_gui_click] = on_gui_click,
     [defines.events.on_gui_opened] = on_gui_opened,
+    [defines.events.on_gui_closed] = on_gui_closed,
     [defines.events.on_gui_selection_state_changed] = on_gui_selection_state_changed,
-    [defines.events.on_gui_checked_state_changed] = on_gui_checked_state_changed
+    [defines.events.on_gui_checked_state_changed] = on_gui_checked_state_changed,
+    [defines.events.on_player_created] = on_player_created
 }
 
 GuiEvent.on_configuration_changed = on_configuration_changed

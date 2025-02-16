@@ -2,6 +2,9 @@
 
 This mod provide a streamline tool to pick units for turret's target priorities.
 
+Features:
+- Sort by unit health. 
+
 ### Native supported enemy mods
 - All enemy race manager units
 - Toxic_biters
@@ -13,23 +16,24 @@ This mod provide a streamline tool to pick units for turret's target priorities.
 - Sandworm from Planet Arrakis
 - Centipedes from Planet Tenebris
 
+Translations: UI options are not translatable because they are used for matching entities.
 
-### TODOs
-- Preset system
-- Records are shared by force.
+### TODO
+- Export/Import sharable string like blueprint.
 
 ### Developer Integration
 ##### New dataset can be register through remote_api
 ```lua
 --- Add a new remote API class if you don't have one
 --- add this function to register your dataset
+local RemoteAPI = {}
 function RemoteAPI.advanced_target_priorities_register_section_data()
     local data =  {
         {
            --- Required 
            delimiter = '-',
            --- Required
-           name = "biters",
+           name = "new-biters",
            --- (Optional)
            prefix = "enemy",
            --- (Optional)
@@ -56,7 +60,7 @@ function RemoteAPI.advanced_target_priorities_register_section_data()
     
     return data
 end
-
+return RemoteAPI
 
 --- In control.lua,
 local RemoteApi = require("__your_mod__/remote_api")
@@ -67,7 +71,8 @@ remote.add_interface("your_mode", RemoteApi)
 ```lua
 --- Add a new remote API class if you don't have one
 --- add this function to register your dataset
-function RemoteAPI.advanced_target_priorities_register_section_data()
+local RemoteAPI = {}
+function RemoteAPI.advanced_target_priorities_insert_section_data()
     local data =  {
        {
            section = 'asteroids',
@@ -83,6 +88,7 @@ function RemoteAPI.advanced_target_priorities_register_section_data()
     
     return data
 end
+return RemoteAPI
 
 
 --- In control.lua,

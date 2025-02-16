@@ -3,10 +3,71 @@
 --- Created by heyqule.
 --- DateTime: 2/13/2025 11:13 PM
 ---
-
+require('util')
 local PresetWindow = {
-    root_name = 'advanced_target_priority_preset'
+    root_name = 'advanced_target_priority_preset',
+    close_button = 'advanced_target_priority_close',
+    preset_name_textfield = nil,
+    preset_name_textfield_confirm_name = 'preset_name_textfield_confirm',
+    preset_name_table = nil,
+    reserved_names = {
+        default = true
+    },
+    load_tag = 'atp_load',
+    remove_tag = 'atp_remove',
+    default_preset = "Default",
 }
+
+local function render_table(list_table, player)
+    local datalist = storage.target_priority_presets[player.index]
+    local player_data = storage.target_priority_player_data[player.index]
+
+    local reserved_names = PresetWindow.reserved_names
+
+    for index, data in pairs(datalist) do
+        local import = list_table.add {
+            type = "sprite-button", 
+            style = "atp_square_green_button", 
+            sprite = "utility/import_slot",
+            tags = {preset=data.name, type="atp_load"}
+        }
+        local name_field = list_table.add {
+            type = 'label',
+            caption = data.name
+        }
+        name_field.style.width = 220
+        if data.name == player_data.preset then
+            local name_field = list_table.add {
+                type = 'label',
+                caption = "(loaded)"
+            }
+        else
+            local flow = list_table.add {
+                type = "flow",
+                direction="vertical",
+            }
+        end
+
+        local lower_name = 'apt_na'
+        if data.name then
+            lower_name = string.lower(data.name)
+        end
+        if not reserved_names[lower_name] then
+            local remove = list_table.add {
+                type = "sprite-button", 
+                style = "atp_square_red_button", 
+                sprite = "utility/trash",
+                tags = {preset=data.name,  type="atp_remove"}
+            }
+        else
+            list_table.add {
+                type = "flow",
+                direction="vertical"
+            }
+        end
+    end
+
+end
 
 function PresetWindow.show(player)
     PresetWindow.hide(player)
@@ -19,7 +80,7 @@ function PresetWindow.show(player)
         direction="vertical",
     }
     container.style.vertically_stretchable = false
-    container.style.width = 480
+    container.style.width = 370
     container.style.height = 320
 
     local top_horizontal = container.add {
@@ -31,21 +92,57 @@ function PresetWindow.show(player)
     pusher.style.vertically_stretchable = true
     pusher.style.horizontally_stretchable = true
     pusher.drag_target = container
+    pusher.style.height = 24
 
     local close_button = top_horizontal.add { type = "sprite-button",
-                                          name = "erm_quality_points_detail_close_button",
+                                          name = "advanced_target_priority_close",
                                           sprite = "utility/close",
-                                          style = "frame_action_button",
-                                          tooltip = { "gui.back-instruction" }
+                                          style = "frame_action_button"
     }
     close_button.style.width = 24
     close_button.style.height = 24
     close_button.style.horizontal_align = "right"
 
 
+    local main_section = container.add {
+        type = "flow",
+        direction="vertical"
+    }
 
+    local scroll_pane = main_section.add {
+        type = "scroll-pane",
+    }
+    scroll_pane.style.width = 350
+    scroll_pane.style.height = 220
 
+    local list_table = scroll_pane.add {
+        type = "table",
+        column_count = 4
+    }
+    PresetWindow.preset_name_table = list_table
 
+    render_table(list_table, player)
+
+    local create_new_flow = main_section.add {
+        type = "flow",
+        direction="horizontal"
+    }
+    create_new_flow.style.top_margin = 10
+
+    local preset_name_textfield = create_new_flow.add {
+        type = "textfield",
+        icon_selector = true
+    }
+    preset_name_textfield.style.width = 300
+    preset_name_textfield.style.right_margin = 10
+    PresetWindow.preset_name_textfield = preset_name_textfield
+
+    PresetWindow.preset_name_textfield_confirm = create_new_flow.add {
+        type = "sprite-button", style = "atp_square_green_button", 
+        sprite = "utility/confirm_slot",
+        name = PresetWindow.preset_name_textfield_confirm_name
+    }
+    
     
     container.force_auto_center()
     container.bring_to_front()
@@ -54,6 +151,53 @@ end
 function PresetWindow.hide(player)
     if player.gui.screen[PresetWindow.root_name] then
         player.gui.screen[PresetWindow.root_name].destroy()
+    end
+end
+
+function PresetWindow.load(player, element)
+    if element and element.valid and element.tags and element.tags.preset then
+        local preset_name = element.tags.preset
+        if storage.target_priority_presets[player.index][preset_name] then
+            local preset_data = storage.target_priority_presets[player.index][preset_name]
+            storage.target_priority_player_data[player.index].preset = preset_data.name
+            storage.target_priority_player_data[player.index].checkbox_data = preset_data.checkbox_data
+        end
+        PresetWindow.hide(player)
+    end
+end
+
+function PresetWindow.remove(player, element)
+    if element and element.valid and element.tags and element.tags.preset then
+        local preset_name = element.tags.preset
+        if storage.target_priority_presets[player.index][preset_name] then
+            local preset_data = storage.target_priority_presets[player.index][preset_name]
+            if preset_data.name == storage.target_priority_player_data[player.index].preset then
+                storage.target_priority_player_data[player.index].preset = 
+                    storage.target_priority_presets[player.index][PresetWindow.default_preset].name
+                storage.target_priority_player_data[player.index].checkbox_data = 
+                    util.table.deepcopy(storage.target_priority_presets[player.index][PresetWindow.default_preset].checkbox_data)
+            end
+            storage.target_priority_presets[player.index][preset_name] = nil
+            PresetWindow.refresh_table(player)
+        end
+    end
+end
+
+function PresetWindow.create(player)
+    if string.len(PresetWindow.preset_name_textfield.text) > 0 then
+        storage.target_priority_player_data[player.index].preset = PresetWindow.preset_name_textfield.text
+        storage.target_priority_presets[player.index][PresetWindow.preset_name_textfield.text] = {
+            name = PresetWindow.preset_name_textfield.text,
+            checkbox_data = {}
+        }
+        PresetWindow.hide(player)
+    end
+end
+
+function PresetWindow.refresh_table(player)
+    if PresetWindow.preset_name_table then
+        PresetWindow.preset_name_table.clear()
+        render_table(PresetWindow.preset_name_table, player)
     end
 end
 
