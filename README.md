@@ -1,9 +1,9 @@
 ﻿### Advanced Target Priorities
 
-This mod provide a streamline tool to pick units for turret's target priorities.
+This mod provide a streamline tool to pick units / asteroids for any turret's target priorities.
 
 Features:
-- Select Units / Asteriods in batch
+- Select units / asteroids in batch
 - Save / Load presets
 - Sort by unit health.
 
@@ -18,7 +18,7 @@ Features:
 - Sandworm from Planet Arrakis
 - Centipedes from Planet Tenebris
 
-Translations: UI options are not translatable because they are used for matching entities.
+Translations: Checkbox options are not translatable because they are used for verifying prototypes.
 
 ### TODO
 - Export/Import sharable string like blueprint.
