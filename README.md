@@ -3,7 +3,7 @@
 This mod provide a streamline tool to pick units for turret's target priorities.
 
 Features:
-- Select Unit / Asteriods in batch
+- Select Units / Asteriods in batch
 - Save / Load presets
 - Sort by unit health.
 
