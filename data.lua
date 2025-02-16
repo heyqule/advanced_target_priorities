@@ -1,1 +1,1 @@
-﻿require('prototypes.styles')
+require('prototypes.styles')

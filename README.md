@@ -1,4 +1,4 @@
-﻿### Advanced Target Priorities
+### Advanced Target Priorities
 
 This mod provide a streamline tool to pick units / asteroids for any turret's target priorities.
 

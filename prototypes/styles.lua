@@ -1,4 +1,4 @@
-﻿data.raw["gui-style"]["default"]["atp_square_green_button"] =
+data.raw["gui-style"]["default"]["atp_square_green_button"] =
 {
     type = "button_style",
     parent = "button",
