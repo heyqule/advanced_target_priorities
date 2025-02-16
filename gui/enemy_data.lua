@@ -21,7 +21,10 @@ local enemy_data = {
         --- allow delimiter override for each option
         option_delimiters = {}
     },
-    ['asteroids'] = {
+}
+
+if script.feature_flags.space_travel then
+    enemy_data['asteroids'] = {
         delimiter = '-',
         name = "asteroids",
         prefix = nil,
@@ -33,8 +36,8 @@ local enemy_data = {
         option_titles = {
             'size', 'unit_type'
         }
-    },
-    ['segmented-unit'] = {
+    }
+    enemy_data['segmented-unit'] = {
         name = "segmented-unit",
         delimiter = '-',
         prefix = nil,
@@ -46,8 +49,8 @@ local enemy_data = {
         option_titles = {
             'size', 'unit_type'
         }
-    },
-    ['pentapods'] = {
+    }
+    enemy_data['pentapods'] = {
         name = "pentapods",
         delimiter = '-',
         prefix = nil,
@@ -60,7 +63,7 @@ local enemy_data = {
             'size', 'unit_type'
         }
     }
-}
+end
 
 if script.active_mods["Toxic_biters"] or
    script.active_mods["Cold_biters"] or
