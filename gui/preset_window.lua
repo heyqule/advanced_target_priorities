@@ -186,6 +186,7 @@ end
 function PresetWindow.create(player)
     if string.len(PresetWindow.preset_name_textfield.text) > 0 then
         storage.target_priority_player_data[player.index].preset = PresetWindow.preset_name_textfield.text
+        storage.target_priority_player_data[player.index].checkbox_data = {}
         storage.target_priority_presets[player.index][PresetWindow.preset_name_textfield.text] = {
             name = PresetWindow.preset_name_textfield.text,
             checkbox_data = {}

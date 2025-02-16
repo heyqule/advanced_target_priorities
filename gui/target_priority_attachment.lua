@@ -199,16 +199,31 @@ local function cache_prototypes()
                                                                  name = final_name
                                                              }})
             if entities and entities[final_name] then
+                local entity = entities[final_name]
                 cached_data[final_name] = {
-                    entity = entities[final_name],
+                    entity = entity,
+                    health = entity.get_max_health(),
                 }
             else
                 log('Advance target priorities: invalid prototype: '..final_name)
             end
         end
     end
+    local num_key_data = {}
+    local i = 1
+    for _, data in pairs(cached_data) do
+        num_key_data[i] = data
+        i = i + 1 
+    end
+    table.sort(num_key_data, function(a, b)
+        return a.health > b.health
+    end)
 
-    return cached_data
+    for index, data in pairs(num_key_data) do
+        cached_data[data.entity.name].order = index
+    end
+    
+    storage.prototype_data = cached_data
 end
 
 
@@ -267,7 +282,8 @@ function TargetPriorityAttachment.init()
     storage.target_priority_player_data = storage.target_priority_player_data or {}
     storage.target_priority_presets = storage.target_priority_presets or {}
     
-    storage.prototype_data = cache_prototypes()
+    storage.prototype_data = {}
+    cache_prototypes()
 end
 
 function TargetPriorityAttachment.init_player_values(player_index)
@@ -324,7 +340,7 @@ function TargetPriorityAttachment.show(player)
         direction="horizontal" 
     }
     local title = top_horizontal.add { type = "label", caption = { "gui-target-attachment.title" } }
-    title.style.left_margin = 20
+    title.style.right_margin = 20
     
     top_horizontal.add { 
         type = "button", 
@@ -409,7 +425,6 @@ end
 function TargetPriorityAttachment.apply(player)
     local player_data = storage.target_priority_player_data[player.index]
     local turret = player_data.turret
-    local profiler = game.create_profiler()
     if turret and turret.valid then
         local checkbox_data = player_data.checkbox_data
         local turret_index = 1
@@ -417,6 +432,7 @@ function TargetPriorityAttachment.apply(player)
             
             clear_targets(turret)
             local prototype_data = storage.prototype_data
+            local sorted_names = {}
             
             for section, cbdata in pairs(checkbox_data) do
                 local dataset = storage.target_priority_data[section]
@@ -425,22 +441,27 @@ function TargetPriorityAttachment.apply(player)
                 local namelist = {}
                 generate_combinations(format_options, {}, 1, namelist, dataset)
                 
-
                 for index, name in pairs(namelist) do
                     local final_name = add_prefix_suffix(name, dataset)
-                    print(final_name)
                     if prototype_data[final_name] then
-                        turret.set_priority_target(turret_index, final_name)
-                        turret_index = turret_index + 1
+                        table.insert(sorted_names, prototype_data[final_name])
                     end
                 end
-            end                    
-        end
+            end
 
+            if sorted_names then
+                table.sort(sorted_names, function(a, b)
+                    return a.order < b.order
+                end)
+                for idx, item in pairs(sorted_names) do
+                    turret.set_priority_target(turret_index, item.entity.name)
+                    turret_index = turret_index + 1
+                end
+            end
+        end
+        
         storage.target_priority_presets[player.index][player_data.preset].checkbox_data = util.table.deepcopy(checkbox_data)
     end
-    profiler.stop()
-    log({ "", "Setting turret priorities", profiler })
 end
 
 function TargetPriorityAttachment.update_filter_list(player, tags, state)
@@ -461,7 +482,7 @@ function TargetPriorityAttachment.clear(player)
         clear_targets(turret)
     end
     storage.target_priority_player_data[player.index].checkbox_data = {}
-    storage.target_priority_presets[player.index][player_data.preset] = {}
+    storage.target_priority_presets[player.index][player_data.preset].checkbox_data = {}
 end
 
 

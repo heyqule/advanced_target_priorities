@@ -4,7 +4,7 @@
 --- DateTime: 2/10/2025 7:13 PM
 ---
 ---
-DEBUG_MODE = true
+DEBUG_MODE = false
 
 handler = require("event_handler")
 handler.add_lib(require("__advanced_target_priorities__/gui/gui_events"))

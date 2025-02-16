@@ -66,28 +66,42 @@ local gui_click_switch = {
         local player = game.players[event.player_index]
         PresetWindow.show(player)
     end,
-    [PresetWindow.preset_name_textfield_confirm_name] = function(event)
-        local player = game.players[event.player_index]
-        PresetWindow.create(player)
-        TargetPriorityAttachment.refresh_preset(event.player_index)
-    end,
     [PresetWindow.close_button] = function(event)
         local player = game.players[event.player_index]
         PresetWindow.hide(player)   
+    end,
+    [PresetWindow.preset_name_textfield_confirm_name] = function(event)
+        local player = game.players[event.player_index]
+        PresetWindow.create(player)
+        TargetPriorityAttachment.apply(player)
+        TargetPriorityAttachment.refresh_preset(event.player_index)
+        TargetPriorityAttachment.refresh_list(
+            TargetPriorityAttachment.section_selector_obj,
+            TargetPriorityAttachment.section_selector_obj.selected_index,
+            event.player_index
+        )
     end,
     [PresetWindow.load_tag] = function(event)
         local player = game.players[event.player_index]
         PresetWindow.load(player, event.element)
         TargetPriorityAttachment.apply(player)
         TargetPriorityAttachment.refresh_preset(event.player_index)
-        TargetPriorityAttachment.refresh_list(TargetPriorityAttachment.section_selector_obj, 1, event.player_index)
+        TargetPriorityAttachment.refresh_list(
+            TargetPriorityAttachment.section_selector_obj,
+            TargetPriorityAttachment.section_selector_obj.selected_index,
+            event.player_index
+        )
     end,
     [PresetWindow.remove_tag] = function(event)
         local player = game.players[event.player_index]
         PresetWindow.remove(player, event.element)
         TargetPriorityAttachment.apply(player)
         TargetPriorityAttachment.refresh_preset(event.player_index)
-        TargetPriorityAttachment.refresh_list(TargetPriorityAttachment.section_selector_obj, 1, event.player_index)
+        TargetPriorityAttachment.refresh_list(
+            TargetPriorityAttachment.section_selector_obj,
+            TargetPriorityAttachment.section_selector_obj.selected_index, 
+            event.player_index
+        )
     end,
 }
 

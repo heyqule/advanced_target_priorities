@@ -1,12 +1,14 @@
-﻿### Enemy Race Manager
+﻿### Advanced Target Priorities
 
 This mod provide a streamline tool to pick units for turret's target priorities.
 
 Features:
-- Sort by unit health. 
+- Select Unit / Asteriods in batch
+- Save / Load presets
+- Sort by unit health.
 
 ### Native supported enemy mods
-- All enemy race manager units
+- All enemy race manager units (Coming soon in v1.0)
 - Toxic_biters
 - Cold_biters
 - ArmouredBiters

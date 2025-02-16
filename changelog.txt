@@ -1,10 +1,10 @@
 ---------------------------------------------------------------------------------------------------
-Version: 1.0.0
-Date: 2024-02-??
+Version: 0.9.0
+Date: 2024-02-16
 
   Features:
     - Allows players to add units in batch to the turret's target priorities list.
     - Support create / delete presets for their selections. 
-    - The sorting of target priority list is based on the descending order of prototype's health.    
+    - The sorting of target priority list is based on the descending order of entities' health.    
     - added remote_api advanced_target_priorities_register_section_data() for 3rd party mod integration. See mod detail page for developer guide.
     - added remote_api advanced_target_priorities_insert_section_data() for 3rd party mod integration. See mod detail page for developer guide.

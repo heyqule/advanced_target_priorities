@@ -6,4 +6,11 @@
 
 local RemoteAPI = {}
 
+---
+--- Print global for debug purpose when you run remote.call("advanced_target_priorities", "print_global")"
+---
+function RemoteAPI.print_global()
+    helpers.write_file("advanced_target_priorities/storage.json",helpers.table_to_json(util.copy(storage)))
+end
+
 return RemoteAPI

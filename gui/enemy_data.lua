@@ -28,7 +28,7 @@ local enemy_data = {
         suffix = 'asteroid',
         options = {
             {'small','medium','big','huge'},
-            {'oxide','carbonic','metallic'}
+            {'oxide','carbonic','metallic','promethium'}
         },
         option_titles = {
             'size', 'unit_type'
