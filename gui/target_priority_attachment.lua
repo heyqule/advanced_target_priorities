@@ -234,13 +234,18 @@ function TargetPriorityAttachment.init()
         if functions["advanced_target_priorities_register_section_data"] then
             local dataset = remote.call(interface_name, "advanced_target_priorities_register_section_data")
             for _, data in pairs(dataset) do
+                local set_data = true
                 if not data.name or not data.delimiter or not data.options or not data.option_titles then
                     error("[advanced_target_priorities_register_section_data] Missing required data attributes. Caused:"..interface_name)
                 end
                 if storage.target_priority_data[data.name] ~= nil and not can_override_by_register_call[interface_name] then
-                    error("[advanced_target_priorities_register_section_data] Section name has already in use. Caused:"..interface_name)
+                    log("[advanced_target_priorities_register_section_data] Section name has already in use, ignoring... Caused:"..interface_name)
+                    set_data = false
                 end
-                storage.target_priority_data[data.name] = data
+
+                if set_data then
+                    storage.target_priority_data[data.name] = data
+                end
             end
         end
 
