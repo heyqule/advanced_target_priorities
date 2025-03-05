@@ -9,7 +9,8 @@ local PresetWindow = require('__advanced_target_priorities__/gui/preset_window')
 local valid_turret_types = {
     ["ammo-turret"] = true,
     ["fluid-turret"] = true,
-    ["electric-turret"] = true
+    ["electric-turret"] = true,
+    ["turret"] = true
 }
 
 local gui_open_switch = {

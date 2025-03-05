@@ -23,7 +23,7 @@ local enemy_data = {
     },
 }
 
-if script.feature_flags.space_travel then
+if script.active_mods["space-age"] then
     enemy_data['asteroids'] = {
         delimiter = '-',
         name = "asteroids",

@@ -180,6 +180,7 @@ end
 
 local function cache_prototypes()
     local cached_data = {}
+    local prototype_get_entity_filtered =  prototypes.get_entity_filtered
     for section, sdata in pairs(storage.target_priority_data) do
         local dataset = storage.target_priority_data[section]
         local format_options = {}
@@ -194,7 +195,7 @@ local function cache_prototypes()
 
         for index, name in pairs(namelist) do
             local final_name = add_prefix_suffix(name, dataset)
-            local entities = prototypes.get_entity_filtered({{
+            local entities = prototype_get_entity_filtered({{
                                                                  filter = "name",
                                                                  name = final_name
                                                              }})
@@ -229,7 +230,6 @@ end
 
 function TargetPriorityAttachment.init()
     storage.target_priority_data = enemy_data
-
     for interface_name, functions in pairs(remote.interfaces) do
         if functions["advanced_target_priorities_register_section_data"] then
             local dataset = remote.call(interface_name, "advanced_target_priorities_register_section_data")
