@@ -384,6 +384,12 @@ function TargetPriorityAttachment.show(player)
 
     local default_section = storage.target_priority_player_data[player.index].current_section
     local dataset = storage.target_priority_data[default_section]
+    
+    if dataset == nil then
+        dataset = storage.target_priority_data['biters']
+        storage.target_priority_player_data[player.index].current_section = 'biters'
+    end
+    
     local formatted_options = {}
     for index, options in pairs(dataset.options) do
         formatted_options[dataset.option_titles[index]] = options
