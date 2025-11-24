@@ -61,7 +61,11 @@ local gui_click_switch = {
     [TargetPriorityAttachment.clear_button] = function(event)
         local player = game.players[event.player_index]
         TargetPriorityAttachment.clear(player)
-        TargetPriorityAttachment.refresh_list(TargetPriorityAttachment.section_selector_obj, 1, event.player_index)
+        TargetPriorityAttachment.refresh_list(
+            storage.target_priority_player_data[player.index].section_selector_obj, 
+            1, 
+            event.player_index
+        )
     end,
     [TargetPriorityAttachment.preset_label] = function(event)
         local player = game.players[event.player_index]
@@ -76,9 +80,10 @@ local gui_click_switch = {
         PresetWindow.create(player)
         TargetPriorityAttachment.apply(player)
         TargetPriorityAttachment.refresh_preset(event.player_index)
+        local selector_obj = storage.target_priority_player_data[player.index].section_selector_obj
         TargetPriorityAttachment.refresh_list(
-            TargetPriorityAttachment.section_selector_obj,
-            TargetPriorityAttachment.section_selector_obj.selected_index,
+            selector_obj,
+            selector_obj.selected_index,
             event.player_index
         )
     end,
@@ -87,9 +92,10 @@ local gui_click_switch = {
         PresetWindow.load(player, event.element)
         TargetPriorityAttachment.apply(player)
         TargetPriorityAttachment.refresh_preset(event.player_index)
+        local selector_obj = storage.target_priority_player_data[player.index].section_selector_obj
         TargetPriorityAttachment.refresh_list(
-            TargetPriorityAttachment.section_selector_obj,
-            TargetPriorityAttachment.section_selector_obj.selected_index,
+            selector_obj,
+            selector_obj.selected_index,
             event.player_index
         )
     end,
@@ -99,8 +105,8 @@ local gui_click_switch = {
         TargetPriorityAttachment.apply(player)
         TargetPriorityAttachment.refresh_preset(event.player_index)
         TargetPriorityAttachment.refresh_list(
-            TargetPriorityAttachment.section_selector_obj,
-            TargetPriorityAttachment.section_selector_obj.selected_index, 
+            storage.target_priority_player_data[player.index].section_selector_obj,
+            storage.target_priority_player_data[player.index].section_selector_obj.selected_index, 
             event.player_index
         )
     end,

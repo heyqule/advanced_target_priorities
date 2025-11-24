@@ -7,9 +7,7 @@ require('util')
 local PresetWindow = {
     root_name = 'advanced_target_priority_preset',
     close_button = 'advanced_target_priority_close',
-    preset_name_textfield = nil,
     preset_name_textfield_confirm_name = 'preset_name_textfield_confirm',
-    preset_name_table = nil,
     reserved_names = {
         default = true
     },
@@ -119,7 +117,7 @@ function PresetWindow.show(player)
         type = "table",
         column_count = 4
     }
-    PresetWindow.preset_name_table = list_table
+    storage.target_priority_player_data[player.index].preset_name_table = list_table
 
     render_table(list_table, player)
 
@@ -135,7 +133,7 @@ function PresetWindow.show(player)
     }
     preset_name_textfield.style.width = 300
     preset_name_textfield.style.right_margin = 10
-    PresetWindow.preset_name_textfield = preset_name_textfield
+    storage.target_priority_player_data[player.index].preset_name_textfield = preset_name_textfield
 
     PresetWindow.preset_name_textfield_confirm = create_new_flow.add {
         type = "sprite-button", style = "atp_square_green_button", 
@@ -184,11 +182,13 @@ function PresetWindow.remove(player, element)
 end
 
 function PresetWindow.create(player)
-    if string.len(PresetWindow.preset_name_textfield.text) > 0 then
-        storage.target_priority_player_data[player.index].preset = PresetWindow.preset_name_textfield.text
-        storage.target_priority_player_data[player.index].checkbox_data = {}
-        storage.target_priority_presets[player.index][PresetWindow.preset_name_textfield.text] = {
-            name = PresetWindow.preset_name_textfield.text,
+    local player_data = storage.target_priority_player_data[player.index]
+    if string.len(player_data.preset_name_textfield.text) > 0 then
+        local preset_name = player_data.preset_name_textfield.text
+        player_data.preset = preset_name
+        player_data.checkbox_data = {}
+        storage.target_priority_presets[player.index][preset_name] = {
+            name = preset_name,
             checkbox_data = {}
         }
         PresetWindow.hide(player)
@@ -196,9 +196,10 @@ function PresetWindow.create(player)
 end
 
 function PresetWindow.refresh_table(player)
-    if PresetWindow.preset_name_table then
-        PresetWindow.preset_name_table.clear()
-        render_table(PresetWindow.preset_name_table, player)
+    local table = storage.target_priority_player_data[player.index].preset_name_table
+    if table then
+        table.clear()
+        render_table(table, player)
     end
 end
 

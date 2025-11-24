@@ -1,27 +1,34 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.3
+Date: 2025-11-24
+
+  Bugfixes:
+    - Fixed an out of index crash when player's selected tab index is somehow higher than the total available tabs.    
+
+---------------------------------------------------------------------------------------------------
 Version: 1.0.2
-Date: 2024-03-23
+Date: 2025-03-23
 
   Bugfixes:
     - Fixed a crash after an supported enemy mod is disabled while "current_section" is on that mod's. It now falls back to biters section. 
 
 ---------------------------------------------------------------------------------------------------
-Version: 1.0.1
-Date: 2024-03-05
+Version: 1.0.1 
+Date: 2025-03-05
 
   Changes:
     - Add "turret" type support as they support target priority as well. (Terran Bunkers)
 
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.0
-Date: 2024-02-21
+Date: 2025-02-21
 
   Changes:
     - Fixed advanced_target_priorities_register_section_data API override issue.
 
 ---------------------------------------------------------------------------------------------------
 Version: 0.9.0
-Date: 2024-02-16
+Date: 2025-02-16
 
   Features:
     - Allows players to add units / asteroids in batch to the turret's target priorities list.

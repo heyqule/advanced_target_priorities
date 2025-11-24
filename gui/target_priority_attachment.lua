@@ -16,7 +16,6 @@ local TargetPriorityAttachment = {
     main_section = "advanced_target_priority_main",
     section_list = "advanced_target_priority_section",
     section_selector = "advanced_target_priority_section_selector",
-    section_selector_obj = nil,
     type_list = {
         size = "advanced_target_priority_size",
         unit_type = "advanced_target_priority_unit_type",
@@ -25,7 +24,6 @@ local TargetPriorityAttachment = {
     },
     apply_button = "advanced_target_priority_apply",
     preset_label = "advanced_target_priority_preset_label",
-    preset_label_field = nil,
     clear_button = "advanced_target_priority_clear",
     default_preset = "Default",
 }
@@ -89,6 +87,10 @@ local function format_data_set(dataset, data)
     return options
 end
 
+local function assign_selected_index(section_selector, player_data)
+    section_selector.selected_index = player_data.selected_index or 1
+end
+
 local function render_section(frame, data, player)
     local section_flow = frame.add {
         type = "flow", name = TargetPriorityAttachment.section_list,  direction="vertical"
@@ -97,14 +99,17 @@ local function render_section(frame, data, player)
     section_flow.style.width = 180
     section_flow.style.height = 305
     section_flow.add { type = "label", caption = { "gui-target-attachment.section_title" } }
-    local section_selctor = section_flow.add {
+    local section_selector = section_flow.add {
         type = "list-box",
         name = TargetPriorityAttachment.section_selector,
     }
-    section_selctor.items = data
+    section_selector.items = data
     local player_data = storage.target_priority_player_data[player.index]
-    section_selctor.selected_index = player_data.selected_index or 1
-    TargetPriorityAttachment.section_selector_obj = section_selctor
+    if not pcall(assign_selected_index, section_selector, player_data) then
+        section_selector.selected_index = 1
+        storage.target_priority_player_data[player.index].selected_index = 1
+    end
+    storage.target_priority_player_data[player.index].section_selector_obj = section_selector
 end
 
 local function render_list(frame, type, data, player, columns)
@@ -285,6 +290,10 @@ function TargetPriorityAttachment.init()
     end
 
     storage.target_priority_player_data = storage.target_priority_player_data or {}
+    for _, players in pairs(game.players) do
+        TargetPriorityAttachment.hide(players)
+    end
+    
     storage.target_priority_presets = storage.target_priority_presets or {}
     
     storage.prototype_data = {}
@@ -365,7 +374,7 @@ function TargetPriorityAttachment.show(player)
     preset_label.style.left_margin = 35
     preset_label.style.right_margin = 35
     preset_label.style.width = 400
-    TargetPriorityAttachment.preset_label_field = preset_label
+    storage.target_priority_player_data[player.index].preset_label_field = preset_label
     
     top_horizontal.add { 
         type = "button", 
@@ -406,8 +415,9 @@ function TargetPriorityAttachment.hide(player)
 end
 
 function TargetPriorityAttachment.refresh_preset(player_index)
-    local active_label = storage.target_priority_player_data[player_index].preset
-    TargetPriorityAttachment.preset_label_field.caption = { "gui-target-attachment.preset_label", active_label }
+    local player_data = storage.target_priority_player_data[player_index]
+    local active_label = player_data.preset
+    player_data.preset_label_field.caption = { "gui-target-attachment.preset_label", active_label }
 end
 
 function TargetPriorityAttachment.refresh_list(list_element, selected_index, player_index)
