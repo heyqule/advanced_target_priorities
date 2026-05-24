@@ -423,6 +423,7 @@ end
 function TargetPriorityAttachment.refresh_list(list_element, selected_index, player_index)
    local main_parent_element = list_element.parent.parent
    local selected_section =  list_element.items[selected_index]
+   list_element.selected_index = selected_index
 
     for _, element in pairs(main_parent_element.children) do
         if element.name ~= TargetPriorityAttachment.section_list then
