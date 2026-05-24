@@ -1,4 +1,12 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.4
+Date: 2026-05-24
+
+  Bugfixes:
+    - Fixed incorrect highlight on section menu. Thanks EdgE790 for PR.
+    - Fixed incorrect list selection when clicking clear Thanks EdgE790 for PR.
+
+---------------------------------------------------------------------------------------------------
 Version: 1.0.3
 Date: 2025-11-24
 
