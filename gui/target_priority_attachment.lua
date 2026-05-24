@@ -432,7 +432,7 @@ function TargetPriorityAttachment.refresh_list(list_element, selected_index, pla
 
     local player_data =  storage.target_priority_player_data[player_index]
     player_data.current_section = selected_section
-    player_data.selected_index = player_index
+    player_data.selected_index = selected_index
 
 
     local dataset = storage.target_priority_data[selected_section]
