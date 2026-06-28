@@ -315,7 +315,7 @@ function TargetPriorityAttachment.init_player_values(player_index)
         }
     }
 
-    if DEBUG_MODE then
+    if ATP_DEBUG_MODE then
         storage.target_priority_presets[player_index]["DEMO 1"] = 
                 {
                     name = "DEMO 1",
