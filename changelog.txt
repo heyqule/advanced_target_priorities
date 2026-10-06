@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.1.1
+Date: 2026-10-06
+
+  Features:
+    - Added "Apply Options" column to the turret target priority attachment window.
+    - Added "Apply to same turret name" option to batch apply priorities across the same surface.
+    - Added numeric "Apply to radius" option (32 - 640 tiles) to limit priorities application to nearby turrets.
+    - Moved the Apply button to the bottom of the "Apply Options" column.
+
+---------------------------------------------------------------------------------------------------
 Version: 2.1.0
 Date: 2026-06-27
 

@@ -6,12 +6,7 @@
 local TargetPriorityAttachment = require('__advanced_target_priorities__/gui/target_priority_attachment')
 local PresetWindow = require('__advanced_target_priorities__/gui/preset_window')
 
-local valid_turret_types = {
-    ["ammo-turret"] = true,
-    ["fluid-turret"] = true,
-    ["electric-turret"] = true,
-    ["turret"] = true
-}
+local valid_turret_types = TargetPriorityAttachment.valid_turret_types
 
 local gui_open_switch = {
     [defines.gui_type.entity] = function(event)
@@ -135,8 +130,22 @@ end
 local on_gui_checked_state_changed = function(event)
     local player = game.players[event.player_index]
     local tags = event.element.tags
-    if tags.name and tags.type then
+    if tags and tags.name and tags.type then
         TargetPriorityAttachment.update_filter_list(player, tags, event.element.state)
+    elseif event.element.name == TargetPriorityAttachment.apply_to_same_turret_name_checkbox then
+        TargetPriorityAttachment.update_apply_to_same_turret_name(player, event.element.state)
+    end
+end
+
+local on_gui_text_changed = function(event)
+    if event.element.name == TargetPriorityAttachment.apply_to_radius_textfield then
+        TargetPriorityAttachment.on_radius_text_changed(event.element, event.player_index)
+    end
+end
+
+local on_gui_confirmed = function(event)
+    if event.element.name == TargetPriorityAttachment.apply_to_radius_textfield then
+        TargetPriorityAttachment.validate_radius_input(event.element, event.player_index)
     end
 end
 
@@ -161,6 +170,8 @@ GuiEvent.events = {
     [defines.events.on_gui_closed] = on_gui_closed,
     [defines.events.on_gui_selection_state_changed] = on_gui_selection_state_changed,
     [defines.events.on_gui_checked_state_changed] = on_gui_checked_state_changed,
+    [defines.events.on_gui_text_changed] = on_gui_text_changed,
+    [defines.events.on_gui_confirmed] = on_gui_confirmed,
     [defines.events.on_player_created] = on_player_created
 }
 
