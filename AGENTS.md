@@ -46,7 +46,7 @@ advanced_target_priorities/
 Factorio 2.0+ deprecated `global` in favor of `storage`. ATP strictly stores persistent state inside `storage`:
 - `storage.target_priority_data`: Registered dataset definitions for each enemy category/section (populated from `enemy_data.lua` + remote API calls).
 - `storage.prototype_data`: Cached table of verified entity prototypes mapped to `{ entity = ..., health = ..., order = ... }`, sorted descending by health.
-- `storage.target_priority_presets[player_index]`: Mapping of preset names to `{ name = "...", checkbox_data = { ... } }`.
+- `storage.target_priority_presets[player_index]`: Mapping of preset names to `{ name = "...", checkbox_data = { ... }, ignore_unlisted_targets = boolean }`.
 - `storage.target_priority_player_data[player_index]`: Per-player state:
   - `turret`: Current `LuaEntity` reference of the opened turret.
   - `current_section`: Active section name (e.g., `"biters"`, `"asteroids"`).
@@ -54,6 +54,7 @@ Factorio 2.0+ deprecated `global` in favor of `storage`. ATP strictly stores per
   - `preset`: Active preset name (defaults to `"Default"`).
   - `apply_to_same_turret_name`: Boolean flag for batch applying to same turret name.
   - `apply_to_radius`: Number (32–640) or nil for radius application.
+  - `ignore_unlisted_targets`: Boolean flag tracking the turret's "ignore unlisted targets" property.
   - `checkbox_data`: Multi-dimensional table tracking selections: `checkbox_data[section][option_type][option_name] = boolean`.
   - Temporary GUI element references: `section_selector_obj`, `preset_label_field`, `preset_name_table`, `preset_name_textfield`, `apply_to_same_turret_name_checkbox`, `apply_to_radius_textfield`.
 
@@ -67,7 +68,7 @@ Factorio 2.0+ deprecated `global` in favor of `storage`. ATP strictly stores per
 - Handled events:
   - `defines.events.on_gui_opened`: Attaches relative GUI (`TargetPriorityAttachment.show`) when opening a valid turret.
   - `defines.events.on_gui_closed`: Closes preset modal if open (`PresetWindow.hide`).
-  - `defines.events.on_gui_click`: Routes action buttons (Apply, Clear, open Preset modal, confirm Preset, load Preset, delete Preset).
+  - `defines.events.on_gui_click`: Routes action buttons (Apply, Save Preset, Clear, open Preset modal, confirm Preset, load Preset, delete Preset).
   - `defines.events.on_gui_selection_state_changed`: Triggers `TargetPriorityAttachment.refresh_list` when selecting a different section.
   - `defines.events.on_gui_checked_state_changed`: Updates `storage.target_priority_player_data[player.index].checkbox_data` and Apply Options checkbox.
   - `defines.events.on_gui_text_changed`: Validates and tracks numeric radius text in Apply Options.
@@ -90,6 +91,13 @@ Factorio 2.0+ deprecated `global` in favor of `storage`. ATP strictly stores per
      - Same turret prototype within radius (`apply_to_same_turret_name = true`, `apply_to_radius = <number>`).
    - Clears existing target priority slots on all matched turrets using `turret.set_priority_target(tindex, nil)`.
    - Iterates the sorted candidate list and assigns targets sequentially via `turret.set_priority_target(index, entity_name)`.
+   - Applies `turret.ignore_unprioritised_targets` matching `player_data.ignore_unlisted_targets` to all matched turrets.
+   - *Note:* Applying priorities does not overwrite or save to the active preset.
+4. **Turret Priority Reading & Checkbox Population:**
+   - When a turret is opened (`TargetPriorityAttachment.show`), `load_from_turret(player, turret)` queries `turret.get_priority_target(index)` and `turret.ignore_unprioritised_targets`.
+   - Reverse-maps entity names to section categories and options via cached `mappings` in `storage.prototype_data`.
+   - Populates `checkbox_data` with the turret's active targets and auto-selects the corresponding section list-box item.
+   - Resets active preset name to `"Default"` on turret switch or opening.
 
 ---
 
@@ -98,7 +106,8 @@ Factorio 2.0+ deprecated `global` in favor of `storage`. ATP strictly stores per
 - Rendered under `player.gui.screen` (draggable modal frame centered on screen).
 - `"Default"` preset is reserved and cannot be deleted.
 - Deleting an active preset reverts the player back to `"Default"`.
-- Creating a preset immediately saves the current selection and updates the active preset label.
+- Creating a preset saves the opened turret's target selection and "ignore unlisted targets" setting.
+- "Save preset" button in the turret attachment header explicitly saves the current selection and "ignore unlisted targets" setting into the active preset.
 
 ---
 
@@ -158,6 +167,8 @@ External mods can register custom targets dynamically during initialization:
 - **GUI Destruction & Recreation:**
   - Ensure any opened frame is destroyed (`.destroy()`) before creating a new instance to prevent duplicate UI elements.
   - Avoid persisting GUI element references across save/load cycles; rebuild references when GUI is opened.
+- ** Factorio API documentation: **
+  - Factorio API can be search locally in ../../doc-html
 
 ### 6.2 Localization Rules
 - Store all user-facing strings (window titles, button captions, tooltips) in `locale/en/strings.cfg`.

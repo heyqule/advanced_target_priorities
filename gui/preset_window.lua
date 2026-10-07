@@ -158,7 +158,8 @@ function PresetWindow.load(player, element)
         if storage.target_priority_presets[player.index][preset_name] then
             local preset_data = storage.target_priority_presets[player.index][preset_name]
             storage.target_priority_player_data[player.index].preset = preset_data.name
-            storage.target_priority_player_data[player.index].checkbox_data = preset_data.checkbox_data
+            storage.target_priority_player_data[player.index].checkbox_data = util.table.deepcopy(preset_data.checkbox_data or {})
+            storage.target_priority_player_data[player.index].ignore_unlisted_targets = (preset_data.ignore_unlisted_targets == true)
         end
         PresetWindow.hide(player)
     end
@@ -170,10 +171,11 @@ function PresetWindow.remove(player, element)
         if storage.target_priority_presets[player.index][preset_name] then
             local preset_data = storage.target_priority_presets[player.index][preset_name]
             if preset_data.name == storage.target_priority_player_data[player.index].preset then
-                storage.target_priority_player_data[player.index].preset = 
-                    storage.target_priority_presets[player.index][PresetWindow.default_preset].name
+                local default_preset_data = storage.target_priority_presets[player.index][PresetWindow.default_preset]
+                storage.target_priority_player_data[player.index].preset = default_preset_data.name
                 storage.target_priority_player_data[player.index].checkbox_data = 
-                    util.table.deepcopy(storage.target_priority_presets[player.index][PresetWindow.default_preset].checkbox_data)
+                    util.table.deepcopy(default_preset_data.checkbox_data or {})
+                storage.target_priority_player_data[player.index].ignore_unlisted_targets = default_preset_data.ignore_unlisted_targets
             end
             storage.target_priority_presets[player.index][preset_name] = nil
             PresetWindow.refresh_table(player)
@@ -186,12 +188,22 @@ function PresetWindow.create(player)
     if string.len(player_data.preset_name_textfield.text) > 0 then
         local preset_name = player_data.preset_name_textfield.text
         player_data.preset = preset_name
-        player_data.checkbox_data = {}
+        local current_checkbox_data = util.table.deepcopy(player_data.checkbox_data or {})
+
+        local ignore_unlisted = player_data.ignore_unlisted_targets or false
+        if player_data.turret and player_data.turret.valid then
+            ignore_unlisted = player_data.turret.ignore_unprioritised_targets
+        end
+        player_data.ignore_unlisted_targets = ignore_unlisted
+
         storage.target_priority_presets[player.index][preset_name] = {
             name = preset_name,
-            checkbox_data = {}
+            checkbox_data = current_checkbox_data,
+            ignore_unlisted_targets = ignore_unlisted
         }
+        player_data.checkbox_data = util.table.deepcopy(current_checkbox_data)
         PresetWindow.hide(player)
+        PresetWindow.show(player)
     end
 end
 

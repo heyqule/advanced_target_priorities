@@ -14,10 +14,11 @@ local gui_open_switch = {
         local entity = event.entity
 
         if entity and entity.valid and valid_turret_types[entity.type] then
+            PresetWindow.hide(owner)
             if not storage.target_priority_player_data[owner.index] then
                 TargetPriorityAttachment.init_player_values(owner.index)
             end
-            storage.target_priority_player_data[owner.index].turret = entity,
+            storage.target_priority_player_data[owner.index].turret = entity
             TargetPriorityAttachment.show(owner)
         else
             TargetPriorityAttachment.hide(owner)
@@ -51,7 +52,15 @@ end
 local gui_click_switch = {
     [TargetPriorityAttachment.apply_button] = function(event)
         local player = game.players[event.player_index]
+        local player_data = storage.target_priority_player_data[player.index]
+        if player_data and player_data.turret and player_data.turret.valid then
+            player_data.ignore_unlisted_targets = TargetPriorityAttachment.get_turret_ignore_unlisted(player_data.turret)
+        end
         TargetPriorityAttachment.apply(player)
+    end,
+    [TargetPriorityAttachment.save_preset_button] = function(event)
+        local player = game.players[event.player_index]
+        TargetPriorityAttachment.save_preset(player)
     end,
     [TargetPriorityAttachment.clear_button] = function(event)
         local player = game.players[event.player_index]

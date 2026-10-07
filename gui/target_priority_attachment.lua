@@ -27,6 +27,7 @@ local TargetPriorityAttachment = {
         tier = "advanced_target_priority_tier",   
     },
     apply_button = "advanced_target_priority_apply",
+    save_preset_button = "advanced_target_priority_save_preset",
     preset_label = "advanced_target_priority_preset_label",
     clear_button = "advanced_target_priority_clear",
     default_preset = "Default",
@@ -38,6 +39,19 @@ local TargetPriorityAttachment = {
     }
 }
 
+function TargetPriorityAttachment.get_turret_ignore_unlisted(turret)
+    if turret and turret.valid then
+        return turret.ignore_unprioritised_targets
+    end
+    return false
+end
+
+function TargetPriorityAttachment.set_turret_ignore_unlisted(turret, state)
+    if turret and turret.valid then
+        turret.ignore_unprioritised_targets = state
+    end
+end
+
 local function get_values(tbl)
     local keys = {}
     for _, value in pairs(tbl) do
@@ -48,17 +62,23 @@ end
 
 local function generate_combinations(categories, current_combo, index, result, dataset)
     if index > #categories then
-
         local final_name = ''
         local delimiter = ''
-        for index, token in pairs(current_combo) do
+        local tokens = {}
+        for c_idx, token in ipairs(current_combo) do
             delimiter = dataset.delimiter
-            if dataset.option_delimiters and dataset.option_delimiters[index] then
-                delimiter = dataset.option_delimiters[index]
+            if dataset.option_delimiters and dataset.option_delimiters[c_idx] then
+                delimiter = dataset.option_delimiters[c_idx]
             end
             final_name = final_name .. token .. delimiter
+            if dataset.option_titles and dataset.option_titles[c_idx] then
+                tokens[dataset.option_titles[c_idx]] = token
+            end
         end
-        result[#result + 1] = string.sub(final_name,1,#final_name - #delimiter)
+        result[#result + 1] = {
+            name = string.sub(final_name, 1, #final_name - #delimiter),
+            tokens = tokens
+        }
         return
     end
 
@@ -216,8 +236,8 @@ local function get_sorted_priority_names(checkbox_data)
             local namelist = {}
             generate_combinations(format_options, {}, 1, namelist, dataset)
 
-            for _, name in pairs(namelist) do
-                local final_name = add_prefix_suffix(name, dataset)
+            for _, item in pairs(namelist) do
+                local final_name = add_prefix_suffix(item.name, dataset)
                 if prototype_data[final_name] then
                     table.insert(sorted_names, prototype_data[final_name])
                 end
@@ -298,7 +318,10 @@ local function get_apply_to_same_turret_name(player_data)
         player_data.apply_to_same_turret_name = state
         return state
     end
-    return player_data.apply_to_same_turret_name or player_data.apply_to_same_turret_type or true
+    if player_data.apply_to_same_turret_name ~= nil then
+        return player_data.apply_to_same_turret_name
+    end
+    return true
 end
 
 local function render_apply_options(frame, player)
@@ -317,12 +340,17 @@ local function render_apply_options(frame, player)
         caption = { "gui-target-attachment.apply_options_title" }
     }
 
+    local same_name_state = true
+    if player_data.apply_to_same_turret_name ~= nil then
+        same_name_state = player_data.apply_to_same_turret_name
+    end
+
     local same_name_checkbox = apply_options_flow.add {
         type = "checkbox",
         name = TargetPriorityAttachment.apply_to_same_turret_name_checkbox,
         caption = { "gui-target-attachment.apply_to_same_turret_name" },
         tooltip = { "gui-target-attachment.apply_to_same_turret_name_tooltip" },
-        state = player_data.apply_to_same_turret_name or true
+        state = same_name_state
     }
     same_name_checkbox.style.top_margin = 5
     player_data.apply_to_same_turret_name_checkbox = same_name_checkbox
@@ -382,18 +410,25 @@ local function cache_prototypes()
         local namelist = {}
         generate_combinations(format_options, {}, 1, namelist, dataset)
 
-        for index, name in pairs(namelist) do
-            local final_name = add_prefix_suffix(name, dataset)
+        for _, item in pairs(namelist) do
+            local final_name = add_prefix_suffix(item.name, dataset)
             local entities = prototype_get_entity_filtered({{
                                                                  filter = "name",
                                                                  name = final_name
                                                              }})
             if entities and entities[final_name] then
                 local entity = entities[final_name]
-                cached_data[final_name] = {
-                    entity = entity,
-                    health = entity.get_max_health(),
-                }
+                if not cached_data[final_name] then
+                    cached_data[final_name] = {
+                        entity = entity,
+                        health = entity.get_max_health(),
+                        mappings = {}
+                    }
+                end
+                table.insert(cached_data[final_name].mappings, {
+                    section = section,
+                    tokens = item.tokens
+                })
             else
                 log('Advance target priorities: invalid prototype: '..final_name)
             end
@@ -490,18 +525,23 @@ function TargetPriorityAttachment.init_player_values(player_index)
         checkbox_data = {},
         current_section = 'biters',
         preset = TargetPriorityAttachment.default_preset,
-        apply_to_same_turret_name = true,
-        apply_to_radius = nil
+        apply_to_same_turret_name = false,
+        apply_to_radius = nil,
+        ignore_unlisted_targets = false
     }
 
     if storage.target_priority_player_data[player_index].apply_to_same_turret_name == nil then
-        storage.target_priority_player_data[player_index].apply_to_same_turret_name = storage.target_priority_player_data[player_index].apply_to_same_turret_type or false
+        storage.target_priority_player_data[player_index].apply_to_same_turret_name = false
+    end
+    if storage.target_priority_player_data[player_index].ignore_unlisted_targets == nil then
+        storage.target_priority_player_data[player_index].ignore_unlisted_targets = false
     end
 
     storage.target_priority_presets[player_index] = storage.target_priority_presets[player_index] or {
         [TargetPriorityAttachment.default_preset] = {
             name = TargetPriorityAttachment.default_preset,
-            checkbox_data = {}
+            checkbox_data = {},
+            ignore_unlisted_targets = false
         }
     }
 
@@ -510,14 +550,80 @@ function TargetPriorityAttachment.init_player_values(player_index)
             local demo_name = "DEMO " .. i
             storage.target_priority_presets[player_index][demo_name] = {
                 name = demo_name,
-                checkbox_data = {}
+                checkbox_data = {},
+                ignore_unlisted_targets = false
             }
         end
     end
 end
 
+function TargetPriorityAttachment.load_from_turret(player, turret)
+    if not turret or not turret.valid then
+        return
+    end
+    local player_data = storage.target_priority_player_data[player.index]
+    if not player_data then
+        return
+    end
+
+    local prototype_data = storage.prototype_data
+    if not prototype_data or not next(prototype_data) or not (select(2, next(prototype_data)).mappings) then
+        cache_prototypes()
+        prototype_data = storage.prototype_data
+    end
+
+    local new_checkbox_data = {}
+    local first_section = nil
+
+    local tindex = 1
+    local kill = false
+    repeat
+        local success, target = pcall(turret.get_priority_target, tindex)
+        if success then
+            if target then
+                local target_name = (type(target) == "string") and target or (target.name)
+                local proto_info = prototype_data and prototype_data[target_name]
+                if proto_info and proto_info.mappings then
+                    for _, mapping in pairs(proto_info.mappings) do
+                        local sec = mapping.section
+                        if not first_section then
+                            first_section = sec
+                        end
+                        new_checkbox_data[sec] = new_checkbox_data[sec] or {}
+                        for opt_type, opt_val in pairs(mapping.tokens) do
+                            new_checkbox_data[sec][opt_type] = new_checkbox_data[sec][opt_type] or {}
+                            new_checkbox_data[sec][opt_type][opt_val] = true
+                        end
+                    end
+                end
+            end
+            tindex = tindex + 1
+            if tindex > 200 then
+                kill = true
+            end
+        else
+            kill = true
+        end
+    until kill
+
+    player_data.checkbox_data = new_checkbox_data
+    player_data.preset = TargetPriorityAttachment.default_preset
+    player_data.ignore_unlisted_targets = TargetPriorityAttachment.get_turret_ignore_unlisted(turret)
+
+    if first_section and storage.target_priority_data[first_section] then
+        player_data.current_section = first_section
+    end
+end
+
 function TargetPriorityAttachment.show(player)
     TargetPriorityAttachment.hide(player)
+
+    local player_data = storage.target_priority_player_data[player.index]
+    player_data.preset = TargetPriorityAttachment.default_preset
+    local turret = player_data.turret
+    if turret and turret.valid then
+        TargetPriorityAttachment.load_from_turret(player, turret)
+    end
     
     local gui = player.gui.relative
 
@@ -535,10 +641,18 @@ function TargetPriorityAttachment.show(player)
         name = TargetPriorityAttachment.top_section,  
         direction="horizontal" 
     }
+    top_horizontal.style.vertical_align = "center"
     local title = top_horizontal.add { type = "label", caption = { "gui-target-attachment.title" } }
-    title.style.right_margin = 20
+    title.style.right_margin = 15
+
+    top_horizontal.add {
+        type = "button",
+        name = TargetPriorityAttachment.save_preset_button,
+        caption = { "gui-target-attachment.save_preset" },
+        tooltip = { "gui-target-attachment.save_preset_tooltip" },
+    }
     
-    local active_label = storage.target_priority_player_data[player.index].preset or TargetPriorityAttachment.default_preset
+    local active_label = player_data.preset or TargetPriorityAttachment.default_preset
     local preset_label = top_horizontal.add { 
         type = "label", 
         name = TargetPriorityAttachment.preset_label, 
@@ -546,10 +660,10 @@ function TargetPriorityAttachment.show(player)
         tooltip = { "gui-target-attachment.preset_label_tooltip" },
         style = 'clickable_label'
     }
-    preset_label.style.left_margin = 35
-    preset_label.style.right_margin = 35
-    preset_label.style.width = 400
-    storage.target_priority_player_data[player.index].preset_label_field = preset_label
+    preset_label.style.left_margin = 15
+    preset_label.style.right_margin = 15
+    preset_label.style.width = 300
+    player_data.preset_label_field = preset_label
     
     local top_filler = top_horizontal.add { type = "empty-widget" }
     top_filler.style.horizontally_stretchable = true
@@ -569,12 +683,20 @@ function TargetPriorityAttachment.show(player)
         table.insert(sections, name)
     end
 
-    local default_section = storage.target_priority_player_data[player.index].current_section
+    local default_section = player_data.current_section
     local dataset = storage.target_priority_data[default_section]
     
     if dataset == nil then
         dataset = storage.target_priority_data['biters']
-        storage.target_priority_player_data[player.index].current_section = 'biters'
+        player_data.current_section = 'biters'
+        default_section = 'biters'
+    end
+
+    for idx, name in ipairs(sections) do
+        if name == default_section then
+            player_data.selected_index = idx
+            break
+        end
     end
     
     local formatted_options = get_formatted_options(dataset)
@@ -592,15 +714,18 @@ function TargetPriorityAttachment.show(player)
 end
 
 function TargetPriorityAttachment.hide(player)
-    if player.gui.relative[TargetPriorityAttachment.root_name] then
-        player.gui.relative[TargetPriorityAttachment.root_name].destroy()
-    end
     local player_data = storage.target_priority_player_data and storage.target_priority_player_data[player.index]
     if player_data then
+        if player_data.apply_to_same_turret_name_checkbox and player_data.apply_to_same_turret_name_checkbox.valid then
+            player_data.apply_to_same_turret_name = player_data.apply_to_same_turret_name_checkbox.state
+        end
         player_data.preset_label_field = nil
         player_data.section_selector_obj = nil
         player_data.apply_to_same_turret_name_checkbox = nil
         player_data.apply_to_radius_textfield = nil
+    end
+    if player.gui.relative[TargetPriorityAttachment.root_name] then
+        player.gui.relative[TargetPriorityAttachment.root_name].destroy()
     end
 end
 
@@ -648,16 +773,42 @@ function TargetPriorityAttachment.apply(player)
         local apply_to_same_name = get_apply_to_same_turret_name(player_data)
         local checkbox_data = player_data.checkbox_data
         local sorted_names = get_sorted_priority_names(checkbox_data)
+        local ignore_unlisted = player_data.ignore_unlisted_targets or false
 
         local targets = get_target_turrets(turret, apply_to_same_name, radius)
         for _, t in pairs(targets) do
             if t and t.valid then
                 set_turret_priorities(t, sorted_names)
+                TargetPriorityAttachment.set_turret_ignore_unlisted(t, ignore_unlisted)
             end
         end
-
-        storage.target_priority_presets[player.index][player_data.preset].checkbox_data = util.table.deepcopy(checkbox_data)
     end
+end
+
+function TargetPriorityAttachment.save_preset(player)
+    local player_data = storage.target_priority_player_data[player.index]
+    if not player_data then
+        return
+    end
+    local preset_name = player_data.preset or TargetPriorityAttachment.default_preset
+    storage.target_priority_presets[player.index] = storage.target_priority_presets[player.index] or {}
+    storage.target_priority_presets[player.index][preset_name] = storage.target_priority_presets[player.index][preset_name] or {
+        name = preset_name,
+        checkbox_data = {}
+    }
+
+    local ignore_unlisted = player_data.ignore_unlisted_targets or false
+    if player_data.turret and player_data.turret.valid then
+        ignore_unlisted = TargetPriorityAttachment.get_turret_ignore_unlisted(player_data.turret)
+    end
+    player_data.ignore_unlisted_targets = ignore_unlisted
+
+    storage.target_priority_presets[player.index][preset_name].checkbox_data = util.table.deepcopy(player_data.checkbox_data or {})
+    storage.target_priority_presets[player.index][preset_name].ignore_unlisted_targets = ignore_unlisted
+    player.create_local_flying_text{
+        text = { "gui-target-attachment.preset_saved", preset_name },
+        create_at_cursor = true
+    }
 end
 
 function TargetPriorityAttachment.update_apply_to_same_turret_name(player, state)
@@ -689,9 +840,15 @@ function TargetPriorityAttachment.clear(player)
     local turret = player_data.turret
     if turret and turret.valid then
         clear_targets(turret)
+        TargetPriorityAttachment.set_turret_ignore_unlisted(turret, false)
     end
-    storage.target_priority_player_data[player.index].checkbox_data = {}
-    storage.target_priority_presets[player.index][player_data.preset].checkbox_data = {}
+    player_data.checkbox_data = {}
+    player_data.ignore_unlisted_targets = false
+    local preset = player_data.preset
+    if preset and storage.target_priority_presets[player.index][preset] then
+        storage.target_priority_presets[player.index][preset].checkbox_data = {}
+        storage.target_priority_presets[player.index][preset].ignore_unlisted_targets = false
+    end
 end
 
 
