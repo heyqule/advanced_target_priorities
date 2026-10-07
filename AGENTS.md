@@ -53,7 +53,7 @@ Factorio 2.0+ deprecated `global` in favor of `storage`. ATP strictly stores per
   - `selected_index`: Selected tab/section list-box index.
   - `preset`: Active preset name (defaults to `"Default"`).
   - `apply_to_same_turret_name`: Boolean flag for batch applying to same turret name.
-  - `apply_to_radius`: Number (32–640) or nil for radius application.
+  - `apply_to_radius`: Number (32–960) or nil for radius application.
   - `ignore_unlisted_targets`: Boolean flag tracking the turret's "ignore unlisted targets" property.
   - `checkbox_data`: Multi-dimensional table tracking selections: `checkbox_data[section][option_type][option_name] = boolean`.
   - Temporary GUI element references: `section_selector_obj`, `preset_label_field`, `preset_name_table`, `preset_name_textfield`, `apply_to_same_turret_name_checkbox`, `apply_to_radius_textfield`.
@@ -72,7 +72,7 @@ Factorio 2.0+ deprecated `global` in favor of `storage`. ATP strictly stores per
   - `defines.events.on_gui_selection_state_changed`: Triggers `TargetPriorityAttachment.refresh_list` when selecting a different section.
   - `defines.events.on_gui_checked_state_changed`: Updates `storage.target_priority_player_data[player.index].checkbox_data` and Apply Options checkbox.
   - `defines.events.on_gui_text_changed`: Validates and tracks numeric radius text in Apply Options.
-  - `defines.events.on_gui_confirmed`: Clamps radius text to range [32, 640] on Enter.
+  - `defines.events.on_gui_confirmed`: Clamps radius text to range [32, 960] on Enter.
   - `defines.events.on_player_created`: Initializes player state via `TargetPriorityAttachment.init_player_values`.
   - `GuiEvent.on_init` and `GuiEvent.on_configuration_changed`: Re-initializes dataset cache via `TargetPriorityAttachment.init()`.
 

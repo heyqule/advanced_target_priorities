@@ -297,9 +297,9 @@ local function sanitize_radius(element, player_index, clamp_min)
     if clamp_min and num < 32 then
         num = 32
         element.text = tostring(32)
-    elseif num > 640 then
-        num = 640
-        element.text = tostring(640)
+    elseif num > 960 then
+        num = 960
+        element.text = tostring(960)
     end
     storage.target_priority_player_data[player_index].apply_to_radius = num
     return num
