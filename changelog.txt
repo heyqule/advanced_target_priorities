@@ -7,11 +7,10 @@ Date: 2026-10-06
     - Added "Apply to same turret name" option to batch apply priorities across the same surface.
     - Added numeric "Apply to radius" option (32 - 640 tiles) to limit priorities application to nearby turrets.
     - Automatically populates category checkboxes and active section based on the opened turret's existing priority targets.
-    - Added "Save preset" button before the preset header to explicitly save the current selection to the active preset.  
+    - Added "Save preset" button before the preset header to explicitly save the current selection to the active preset. Applying priorities no longer automatically saves/overwrites the active preset.  
 
   Changes:
     - Moved the Apply button to the bottom of the "Apply Options" column.
-    - Applying priorities no longer automatically saves/overwrites the active preset.
     - Creating new preset will also save the turret selection as preset selection.
     - Presets now save the "ignore unlisted targets" setting, and applying presets or priorities applies it to turrets as well.
 
