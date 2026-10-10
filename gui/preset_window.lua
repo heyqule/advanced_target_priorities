@@ -17,8 +17,9 @@ local PresetWindow = {
 }
 
 local function render_table(list_table, player)
-    local datalist = storage.target_priority_presets[player.index]
-    local player_data = storage.target_priority_player_data[player.index]
+    local player_index = player.index
+    local datalist = storage.target_priority_presets[player_index]
+    local player_data = storage.target_priority_player_data[player_index]
 
     local reserved_names = PresetWindow.reserved_names
 
@@ -70,6 +71,8 @@ end
 function PresetWindow.show(player)
     PresetWindow.hide(player)
 
+    local player_index = player.index
+    local player_data = storage.target_priority_player_data[player_index]
     local gui = player.gui.screen
     
     local container = gui.add{
@@ -117,7 +120,7 @@ function PresetWindow.show(player)
         type = "table",
         column_count = 4
     }
-    storage.target_priority_player_data[player.index].preset_name_table = list_table
+    player_data.preset_name_table = list_table
 
     render_table(list_table, player)
 
@@ -133,7 +136,7 @@ function PresetWindow.show(player)
     }
     preset_name_textfield.style.width = 300
     preset_name_textfield.style.right_margin = 10
-    storage.target_priority_player_data[player.index].preset_name_textfield = preset_name_textfield
+    player_data.preset_name_textfield = preset_name_textfield
 
     PresetWindow.preset_name_textfield_confirm = create_new_flow.add {
         type = "sprite-button", style = "atp_square_green_button", 
@@ -147,19 +150,24 @@ function PresetWindow.show(player)
 end
 
 function PresetWindow.hide(player)
-    if player.gui.screen[PresetWindow.root_name] then
-        player.gui.screen[PresetWindow.root_name].destroy()
+    local screen_gui = player.gui.screen
+    local root_name = PresetWindow.root_name
+    if screen_gui[root_name] then
+        screen_gui[root_name].destroy()
     end
 end
 
 function PresetWindow.load(player, element)
     if element and element.valid and element.tags and element.tags.preset then
+        local player_index = player.index
+        local presets = storage.target_priority_presets[player_index]
         local preset_name = element.tags.preset
-        if storage.target_priority_presets[player.index][preset_name] then
-            local preset_data = storage.target_priority_presets[player.index][preset_name]
-            storage.target_priority_player_data[player.index].preset = preset_data.name
-            storage.target_priority_player_data[player.index].checkbox_data = util.table.deepcopy(preset_data.checkbox_data or {})
-            storage.target_priority_player_data[player.index].ignore_unlisted_targets = (preset_data.ignore_unlisted_targets == true)
+        if presets and presets[preset_name] then
+            local preset_data = presets[preset_name]
+            local player_data = storage.target_priority_player_data[player_index]
+            player_data.preset = preset_data.name
+            player_data.checkbox_data = util.table.deepcopy(preset_data.checkbox_data or {})
+            player_data.ignore_unlisted_targets = (preset_data.ignore_unlisted_targets == true)
         end
         PresetWindow.hide(player)
     end
@@ -167,24 +175,28 @@ end
 
 function PresetWindow.remove(player, element)
     if element and element.valid and element.tags and element.tags.preset then
+        local player_index = player.index
+        local presets = storage.target_priority_presets[player_index]
         local preset_name = element.tags.preset
-        if storage.target_priority_presets[player.index][preset_name] then
-            local preset_data = storage.target_priority_presets[player.index][preset_name]
-            if preset_data.name == storage.target_priority_player_data[player.index].preset then
-                local default_preset_data = storage.target_priority_presets[player.index][PresetWindow.default_preset]
-                storage.target_priority_player_data[player.index].preset = default_preset_data.name
-                storage.target_priority_player_data[player.index].checkbox_data = 
+        if presets and presets[preset_name] then
+            local preset_data = presets[preset_name]
+            local player_data = storage.target_priority_player_data[player_index]
+            if preset_data.name == player_data.preset then
+                local default_preset_data = presets[PresetWindow.default_preset]
+                player_data.preset = default_preset_data.name
+                player_data.checkbox_data = 
                     util.table.deepcopy(default_preset_data.checkbox_data or {})
-                storage.target_priority_player_data[player.index].ignore_unlisted_targets = default_preset_data.ignore_unlisted_targets
+                player_data.ignore_unlisted_targets = default_preset_data.ignore_unlisted_targets
             end
-            storage.target_priority_presets[player.index][preset_name] = nil
+            presets[preset_name] = nil
             PresetWindow.refresh_table(player)
         end
     end
 end
 
 function PresetWindow.create(player)
-    local player_data = storage.target_priority_player_data[player.index]
+    local player_index = player.index
+    local player_data = storage.target_priority_player_data[player_index]
     if string.len(player_data.preset_name_textfield.text) > 0 then
         local preset_name = player_data.preset_name_textfield.text
         player_data.preset = preset_name
@@ -196,7 +208,8 @@ function PresetWindow.create(player)
         end
         player_data.ignore_unlisted_targets = ignore_unlisted
 
-        storage.target_priority_presets[player.index][preset_name] = {
+        local presets = storage.target_priority_presets[player_index]
+        presets[preset_name] = {
             name = preset_name,
             checkbox_data = current_checkbox_data,
             ignore_unlisted_targets = ignore_unlisted
@@ -208,7 +221,8 @@ function PresetWindow.create(player)
 end
 
 function PresetWindow.refresh_table(player)
-    local table = storage.target_priority_player_data[player.index].preset_name_table
+    local player_data = storage.target_priority_player_data[player.index]
+    local table = player_data and player_data.preset_name_table
     if table then
         table.clear()
         render_table(table, player)

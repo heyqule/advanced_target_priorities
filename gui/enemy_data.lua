@@ -23,7 +23,10 @@ local enemy_data = {
     },
 }
 
-if script.active_mods["space-age"] then
+local active_mods = script.active_mods
+local table_insert = table.insert
+
+if active_mods["space-age"] then
     enemy_data['asteroids'] = {
         delimiter = '-',
         name = "asteroids",
@@ -65,10 +68,10 @@ if script.active_mods["space-age"] then
     }
 end
 
-if script.active_mods["Toxic_biters"] or
-   script.active_mods["Cold_biters"] or
-   script.active_mods["ArmouredBiters"] or
-   script.active_mods["Explosive_biters"]
+if active_mods["Toxic_biters"] or
+   active_mods["Cold_biters"] or
+   active_mods["ArmouredBiters"] or
+   active_mods["Explosive_biters"]
 then
     enemy_data["biter_variants"] = {
         delimiter = '-',
@@ -86,19 +89,19 @@ then
     }
 end
 
-if script.active_mods["Toxic_biters"] then
-    table.insert(enemy_data["biter_variants"]['options'][2], 'toxic')
+if active_mods["Toxic_biters"] then
+    table_insert(enemy_data["biter_variants"]['options'][2], 'toxic')
 end
-if script.active_mods["Cold_biters"] then
-    table.insert(enemy_data["biter_variants"]['options'][2], 'cold')
+if active_mods["Cold_biters"] then
+    table_insert(enemy_data["biter_variants"]['options'][2], 'cold')
 end
-if script.active_mods["ArmouredBiters"] then
-    table.insert(enemy_data["biter_variants"]['options'][2], 'armoured')
+if active_mods["ArmouredBiters"] then
+    table_insert(enemy_data["biter_variants"]['options'][2], 'armoured')
 end
-if script.active_mods["Explosive_biters"] then
-    table.insert(enemy_data["biter_variants"]['options'][2], 'explosive')
+if active_mods["Explosive_biters"] then
+    table_insert(enemy_data["biter_variants"]['options'][2], 'explosive')
 end
-if script.active_mods['Electric_flying_enemies'] then
+if active_mods['Electric_flying_enemies'] then
     enemy_data["fulgoran_enemies"] = {
         delimiter = '-',
         name = "fulgoran_enemies",
@@ -114,11 +117,11 @@ if script.active_mods['Electric_flying_enemies'] then
     }
 end
 
-if script.active_mods['planet-arrakis'] then
-    table.insert(enemy_data['segmented-unit']['options'][2], 'sandworm')
+if active_mods['planet-arrakis'] then
+    table_insert(enemy_data['segmented-unit']['options'][2], 'sandworm')
 end
 
-if script.active_mods['tenebris'] or script.active_mods['tenebris-prime'] then
+if active_mods['tenebris'] or active_mods['tenebris-prime'] then
     enemy_data["tenebris"] = {
         delimiter = '-',
         name = "tenebris",
@@ -134,9 +137,9 @@ if script.active_mods['tenebris'] or script.active_mods['tenebris-prime'] then
     }
 end
 
-if script.active_mods['behemoth-enemies'] then
-    table.insert(enemy_data['pentapods']['options'][1],'behemoth')
-    table.insert(enemy_data['segmented-unit']['options'][1],'behemoth')
+if active_mods['behemoth-enemies'] then
+    table_insert(enemy_data['pentapods']['options'][1],'behemoth')
+    table_insert(enemy_data['segmented-unit']['options'][1],'behemoth')
 end
 
 return enemy_data

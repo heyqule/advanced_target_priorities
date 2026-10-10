@@ -68,7 +68,7 @@ Factorio 2.0+ deprecated `global` in favor of `storage`. ATP strictly stores per
 - Handled events:
   - `defines.events.on_gui_opened`: Attaches relative GUI (`TargetPriorityAttachment.show`) when opening a valid turret.
   - `defines.events.on_gui_closed`: Closes preset modal if open (`PresetWindow.hide`).
-  - `defines.events.on_gui_click`: Routes action buttons (Apply, Save Preset, Clear, open Preset modal, confirm Preset, load Preset, delete Preset).
+  - `defines.events.on_gui_click`: Routes action buttons (Apply, Save Preset, Clear, Select All / Unselect All column options, open Preset modal, confirm Preset, load Preset, delete Preset).
   - `defines.events.on_gui_selection_state_changed`: Triggers `TargetPriorityAttachment.refresh_list` when selecting a different section.
   - `defines.events.on_gui_checked_state_changed`: Updates `storage.target_priority_player_data[player.index].checkbox_data` and Apply Options checkbox.
   - `defines.events.on_gui_text_changed`: Validates and tracks numeric radius text in Apply Options.

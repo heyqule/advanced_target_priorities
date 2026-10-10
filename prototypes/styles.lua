@@ -59,3 +59,17 @@ data.raw["gui-style"]["default"]["atp_square_red_button"] =
     },
     left_click_sound = { filename = "__core__/sound/gui-red-button.ogg", volume = 0.5 }
 }
+
+data.raw["gui-style"]["default"]["atp_small_button"] =
+{
+    type = "button_style",
+    parent = "button",
+    minimal_width = 0,
+    minimal_height = 0,
+    height = 24,
+    left_padding = 4,
+    right_padding = 4,
+    top_padding = 0,
+    bottom_padding = 0,
+    font = "default-small-semibold",
+}

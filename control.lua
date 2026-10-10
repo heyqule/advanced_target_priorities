@@ -7,7 +7,7 @@
 ATP_DEBUG_MODE = false
 
 
-handler = require("event_handler")
+local handler = require("event_handler")
 handler.add_lib(require("__advanced_target_priorities__/gui/gui_events"))
 
 local RemoteApi = require("__advanced_target_priorities__/remote_api")

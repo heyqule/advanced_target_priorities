@@ -15,10 +15,11 @@ local gui_open_switch = {
 
         if entity and entity.valid and valid_turret_types[entity.type] then
             PresetWindow.hide(owner)
-            if not storage.target_priority_player_data[owner.index] then
+            local target_priority_player_data = storage.target_priority_player_data
+            if not target_priority_player_data[owner.index] then
                 TargetPriorityAttachment.init_player_values(owner.index)
             end
-            storage.target_priority_player_data[owner.index].turret = entity
+            target_priority_player_data[owner.index].turret = entity
             TargetPriorityAttachment.show(owner)
         else
             TargetPriorityAttachment.hide(owner)
@@ -65,11 +66,26 @@ local gui_click_switch = {
     [TargetPriorityAttachment.clear_button] = function(event)
         local player = game.players[event.player_index]
         TargetPriorityAttachment.clear(player)
+        local player_data = storage.target_priority_player_data[player.index]
         TargetPriorityAttachment.refresh_list(
-            storage.target_priority_player_data[player.index].section_selector_obj, 
+            player_data.section_selector_obj, 
             1, 
             event.player_index
         )
+    end,
+    [TargetPriorityAttachment.select_all_tag] = function(event)
+        local player = game.players[event.player_index]
+        local option_type = event.element.tags and event.element.tags.option_type
+        if option_type then
+            TargetPriorityAttachment.set_column_state(player, option_type, true)
+        end
+    end,
+    [TargetPriorityAttachment.unselect_all_tag] = function(event)
+        local player = game.players[event.player_index]
+        local option_type = event.element.tags and event.element.tags.option_type
+        if option_type then
+            TargetPriorityAttachment.set_column_state(player, option_type, false)
+        end
     end,
     [TargetPriorityAttachment.preset_label] = function(event)
         local player = game.players[event.player_index]
@@ -108,9 +124,10 @@ local gui_click_switch = {
         PresetWindow.remove(player, event.element)
         TargetPriorityAttachment.apply(player)
         TargetPriorityAttachment.refresh_preset(event.player_index)
+        local selector_obj = storage.target_priority_player_data[player.index].section_selector_obj
         TargetPriorityAttachment.refresh_list(
-            storage.target_priority_player_data[player.index].section_selector_obj,
-            storage.target_priority_player_data[player.index].section_selector_obj.selected_index, 
+            selector_obj,
+            selector_obj.selected_index, 
             event.player_index
         )
     end,
